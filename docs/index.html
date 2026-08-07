@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOMC Economic Dashboard</title>
+<style>
+  :root { color-scheme: light; --bg:#f9f9f7; --surface:#fcfcfb; --text:#0b0b0b; --muted:#52514e; --border:rgba(11,11,11,0.10); }
+  @media (prefers-color-scheme: dark) {
+    :root { color-scheme: dark; --bg:#0d0d0d; --surface:#1a1a19; --text:#ffffff; --muted:#c3c2b7; --border:rgba(255,255,255,0.10); }
+  }
+  body { margin:0; background:var(--bg); color:var(--text); font-family: system-ui,-apple-system,"Segoe UI",sans-serif; }
+  .wrap { max-width: 640px; margin: 10vh auto; padding: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+  h1 { font-size: 1.3rem; margin-top: 0; }
+  p { color: var(--muted); line-height: 1.6; }
+  code { background: var(--border); padding: 2px 6px; border-radius: 4px; }
+  ol { color: var(--muted); line-height: 1.8; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>FOMC Economic Dashboard — not generated yet</h1>
+    <p>This page is rebuilt automatically from live FRED data by a scheduled GitHub Actions workflow. It hasn't run successfully yet.</p>
+    <ol>
+      <li>Add a <code>FRED_API_KEY</code> repo secret (free key at fred.stlouisfed.org).</li>
+      <li>Run the "Update economic dashboard" workflow once manually (Actions tab &rarr; Run workflow).</li>
+      <li>This page will be replaced with the live dashboard.</li>
+    </ol>
+    <p>See the repository README for full setup instructions.</p>
+  </div>
+</body>
+</html>
