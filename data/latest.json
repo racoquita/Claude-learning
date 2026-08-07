@@ -1,0 +1,50 @@
+{
+  "CPIAUCSL": {
+    "name": "Consumer Price Index",
+    "units": "index (1982-84=100), SA",
+    "frequency": "monthly",
+    "date": "2026-06-01",
+    "value": 332.568,
+    "fetched_at": "2026-08-07T16:09:21.841738+00:00"
+  },
+  "UNRATE": {
+    "name": "Unemployment Rate",
+    "units": "percent, SA",
+    "frequency": "monthly",
+    "date": "2026-07-01",
+    "value": 4.1,
+    "fetched_at": "2026-08-07T16:09:21.841738+00:00"
+  },
+  "PAYEMS": {
+    "name": "Nonfarm Payrolls",
+    "units": "thousands of persons, SA",
+    "frequency": "monthly",
+    "date": "2026-07-01",
+    "value": 158858.0,
+    "fetched_at": "2026-08-07T16:09:21.841738+00:00"
+  },
+  "GDPC1": {
+    "name": "Real Gross Domestic Product",
+    "units": "billions of chained 2017 dollars, SAAR",
+    "frequency": "quarterly",
+    "date": "2026-04-01",
+    "value": 24270.599,
+    "fetched_at": "2026-08-07T16:09:21.841738+00:00"
+  },
+  "DFEDTARU": {
+    "name": "Fed Funds Target Rate (Upper Bound)",
+    "units": "percent",
+    "frequency": "daily (changes at FOMC decisions)",
+    "date": "2026-08-07",
+    "value": 3.75,
+    "fetched_at": "2026-08-07T16:09:21.841738+00:00"
+  },
+  "DFEDTARL": {
+    "name": "Fed Funds Target Rate (Lower Bound)",
+    "units": "percent",
+    "frequency": "daily (changes at FOMC decisions)",
+    "date": "2026-08-07",
+    "value": 3.5,
+    "fetched_at": "2026-08-07T16:09:21.841738+00:00"
+  }
+}
