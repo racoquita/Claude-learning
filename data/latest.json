@@ -5,7 +5,7 @@
     "frequency": "monthly",
     "date": "2026-07-01",
     "value": 332.813,
-    "fetched_at": "2026-08-13T16:08:58.637747+00:00"
+    "fetched_at": "2026-08-13T17:10:35.888931+00:00"
   },
   "UNRATE": {
     "name": "Unemployment Rate",
@@ -13,7 +13,7 @@
     "frequency": "monthly",
     "date": "2026-07-01",
     "value": 4.1,
-    "fetched_at": "2026-08-13T16:08:58.637747+00:00"
+    "fetched_at": "2026-08-13T17:10:35.888931+00:00"
   },
   "PAYEMS": {
     "name": "Nonfarm Payrolls",
@@ -21,7 +21,7 @@
     "frequency": "monthly",
     "date": "2026-07-01",
     "value": 158858.0,
-    "fetched_at": "2026-08-13T16:08:58.637747+00:00"
+    "fetched_at": "2026-08-13T17:10:35.888931+00:00"
   },
   "GDPC1": {
     "name": "Real Gross Domestic Product",
@@ -29,7 +29,7 @@
     "frequency": "quarterly",
     "date": "2026-04-01",
     "value": 24270.599,
-    "fetched_at": "2026-08-13T16:08:58.637747+00:00"
+    "fetched_at": "2026-08-13T17:10:35.888931+00:00"
   },
   "DFEDTARU": {
     "name": "Fed Funds Target Rate (Upper Bound)",
@@ -37,7 +37,7 @@
     "frequency": "daily (changes at FOMC decisions)",
     "date": "2026-08-13",
     "value": 3.75,
-    "fetched_at": "2026-08-13T16:08:58.637747+00:00"
+    "fetched_at": "2026-08-13T17:10:35.888931+00:00"
   },
   "DFEDTARL": {
     "name": "Fed Funds Target Rate (Lower Bound)",
@@ -45,6 +45,6 @@
     "frequency": "daily (changes at FOMC decisions)",
     "date": "2026-08-13",
     "value": 3.5,
-    "fetched_at": "2026-08-13T16:08:58.637747+00:00"
+    "fetched_at": "2026-08-13T17:10:35.888931+00:00"
   }
 }
