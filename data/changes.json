@@ -1,18 +1,1 @@
-[
-  {
-    "series_id": "DFEDTARU",
-    "name": "Fed Funds Target Rate (Upper Bound)",
-    "previous_date": "2026-09-01",
-    "previous_value": 3.75,
-    "new_date": "2026-09-02",
-    "new_value": 3.75
-  },
-  {
-    "series_id": "DFEDTARL",
-    "name": "Fed Funds Target Rate (Lower Bound)",
-    "previous_date": "2026-09-01",
-    "previous_value": 3.5,
-    "new_date": "2026-09-02",
-    "new_value": 3.5
-  }
-]
+[]
