@@ -29,6 +29,11 @@ SERIES = {
         "units": "index (1982-84=100), SA",
         "frequency": "monthly",
     },
+    "CPILFESL": {
+        "name": "Core CPI (less food and energy)",
+        "units": "index (1982-84=100), SA",
+        "frequency": "monthly",
+    },
     "UNRATE": {
         "name": "Unemployment Rate",
         "units": "percent, SA",

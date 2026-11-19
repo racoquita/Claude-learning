@@ -3,6 +3,7 @@
 An auto-updating dashboard of the indicators the Federal Reserve watches most:
 
 - **CPI** (year-over-year inflation)
+- **Core CPI** (year-over-year, excluding food and energy)
 - **Unemployment rate**
 - **Jobs added/lost** (monthly change in nonfarm payrolls)
 - **GDP growth** (quarter-over-quarter, annualized)
@@ -42,12 +43,12 @@ Each run:
 
 1. `scripts/fetch_data.py` pulls the latest observations for each series from
    FRED and caches them under `data/`.
-2. `scripts/build_dashboard.py` computes the derived metrics (CPI YoY%, jobs
+2. `scripts/build_dashboard.py` computes the derived metrics (CPI and core CPI YoY%, jobs
    added, GDP annualized growth) and regenerates `docs/index.html`.
 3. If anything changed, the workflow commits and pushes — which republishes
    the GitHub Pages site automatically.
 
-Data series tracked (FRED codes): `CPIAUCSL`, `UNRATE`, `PAYEMS`, `GDPC1`,
+Data series tracked (FRED codes): `CPIAUCSL`, `CPILFESL`, `UNRATE`, `PAYEMS`, `GDPC1`,
 `DFEDTARU`/`DFEDTARL`. See `scripts/fetch_data.py` for details.
 
 ## Notifications (not wired up yet)

@@ -145,7 +145,7 @@ TEMPLATE = string.Template(r"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FOMC Economic Dashboard</title>
-<meta name="description" content="Auto-updating dashboard of the indicators the FOMC watches most: CPI, unemployment, jobs added, GDP growth, and the Fed funds target rate.">
+<meta name="description" content="Auto-updating dashboard of the indicators the FOMC watches most: CPI, core CPI, unemployment, jobs added, GDP growth, and the Fed funds target rate.">
 <script src="vendor/chart.umd.js"></script>
 <style>
 :root {
@@ -161,6 +161,7 @@ TEMPLATE = string.Template(r"""<!doctype html>
   --delta-good: #006300;
   --delta-bad: #d03b3b;
   --series-cpi: #2a78d6;
+  --series-core-cpi: #c2477d;
   --series-unemployment: #eb6834;
   --series-gdp: #1baf7a;
   --series-fedfunds: #4a3aa7;
@@ -181,6 +182,7 @@ TEMPLATE = string.Template(r"""<!doctype html>
     --delta-good: #0ca30c;
     --delta-bad: #d03b3b;
     --series-cpi: #3987e5;
+    --series-core-cpi: #e0679c;
     --series-unemployment: #d95926;
     --series-gdp: #199e70;
     --series-fedfunds: #9085e9;
@@ -201,6 +203,7 @@ TEMPLATE = string.Template(r"""<!doctype html>
   --delta-good: #0ca30c;
   --delta-bad: #d03b3b;
   --series-cpi: #3987e5;
+  --series-core-cpi: #e0679c;
   --series-unemployment: #d95926;
   --series-gdp: #199e70;
   --series-fedfunds: #9085e9;
@@ -227,7 +230,7 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
   border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; cursor: pointer;
 }
 .tiles {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: 12px; margin-bottom: 28px;
 }
 .tile {
@@ -240,10 +243,10 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .tile-delta.good { color: var(--delta-good); }
 .tile-delta.bad { color: var(--delta-bad); }
 .tile-delta.neutral { color: var(--text-secondary); }
-.sparkline { width: 100%; height: 28px; margin-top: 8px; display: block; }
+.sparkline { width: 100%; max-width: 160px; height: 28px; margin-top: 8px; display: block; }
 .tile-asof { font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; }
 .charts {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 16px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px;
 }
 .chart-card {
   background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
@@ -285,7 +288,7 @@ footer a { color: inherit; }
   </section>
 
   <footer>
-    <p>Series: CPI (CPIAUCSL, YoY %), Unemployment Rate (UNRATE), Nonfarm Payrolls change (PAYEMS, jobs added/month),
+    <p>Series: CPI (CPIAUCSL, YoY %), Core CPI excl. food &amp; energy (CPILFESL, YoY %), Unemployment Rate (UNRATE), Nonfarm Payrolls change (PAYEMS, jobs added/month),
     Real GDP (GDPC1, QoQ annualized %), Fed Funds Target Rate upper bound (DFEDTARU). All via the
     <a href="https://fred.stlouisfed.org/" target="_blank" rel="noopener">FRED API</a>.</p>
     <p>This page is rebuilt automatically by a scheduled GitHub Actions workflow. See the repo README for setup and how to wire up push/email notifications.</p>
@@ -401,12 +404,14 @@ def main() -> int:
     errors = load_json(DATA_DIR / "errors.json", [])
 
     cpi_hist = history("CPIAUCSL")
+    core_cpi_hist = history("CPILFESL")
     unrate_hist = history("UNRATE")
     payems_hist = history("PAYEMS")
     gdp_hist = history("GDPC1")
     fedfunds_hist = history("DFEDTARU")
 
     cpi_yoy = pct_change(cpi_hist, 12)
+    core_cpi_yoy = pct_change(core_cpi_hist, 12)
     jobs_added = diff(payems_hist, 1)
     gdp_growth = annualized_pct_change(gdp_hist, 1, 4)
 
@@ -419,7 +424,7 @@ def main() -> int:
         return 1
 
     def delta_class(cur, prev, higher_is_good):
-        if cur == prev:
+        if round(cur, 1) == round(prev, 1):
             return "neutral"
         if higher_is_good:
             return "good" if cur > prev else "bad"
@@ -432,6 +437,15 @@ def main() -> int:
         f"{cpi_cur - cpi_prev:+.1f} pts vs last month",
         delta_class(cpi_cur, cpi_prev, higher_is_good=False),
         fmt_date(cpi_yoy[-1]["date"]), sparkline(cpi_yoy), "#2a78d6"))
+
+    # Core CPI is optional so the page still builds before its first fetch.
+    if len(core_cpi_yoy) >= 2:
+        core_cur, core_prev = core_cpi_yoy[-1]["value"], core_cpi_yoy[-2]["value"]
+        tiles.append(stat_tile(
+            "Core CPI (YoY)", f"{core_cur:.1f}%",
+            f"{core_cur - core_prev:+.1f} pts vs last month",
+            delta_class(core_cur, core_prev, higher_is_good=False),
+            fmt_date(core_cpi_yoy[-1]["date"]), sparkline(core_cpi_yoy), "#c2477d"))
 
     ur_cur, ur_prev = unrate_hist[-1]["value"], unrate_hist[-2]["value"]
     tiles.append(stat_tile(
@@ -465,9 +479,15 @@ def main() -> int:
     chart_htmls = []
     chart_configs = []
 
-    for html, cfg in [
+    cards = [
         chart_card("chart-cpi", "CPI, Year-over-Year", "Headline inflation rate, monthly", cpi_yoy,
                    "--series-cpi", "line", "%", "%"),
+    ]
+    if core_cpi_yoy:
+        cards.append(chart_card("chart-core-cpi", "Core CPI, Year-over-Year",
+                                "Inflation excluding food and energy, monthly", core_cpi_yoy,
+                                "--series-core-cpi", "line", "%", "%"))
+    cards += [
         chart_card("chart-unrate", "Unemployment Rate", "Share of labor force unemployed, monthly", unrate_hist,
                    "--series-unemployment", "line", "%", "%"),
         chart_card("chart-jobs", "Jobs Added / Lost", "Change in nonfarm payrolls, thousands, monthly", jobs_added,
@@ -476,7 +496,9 @@ def main() -> int:
                    "--series-gdp", "line", "%", "%"),
         chart_card("chart-fedfunds", "Fed Funds Target Rate", "Upper bound of the FOMC's target range, daily",
                    fedfunds_hist, "--series-fedfunds", "step", "%", "%"),
-    ]:
+    ]
+
+    for html, cfg in cards:
         chart_htmls.append(html)
         chart_configs.append(cfg)
 
