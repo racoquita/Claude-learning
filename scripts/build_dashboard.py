@@ -27,36 +27,70 @@ def history(series_id: str) -> list[dict]:
     return load_json(HISTORY_DIR / f"{series_id}.json", [])
 
 
-def pct_change(series: list[dict], periods: int) -> list[dict]:
+def _month_index(d: str) -> int:
+    date = dt.date.fromisoformat(d)
+    return date.year * 12 + date.month - 1
+
+
+def _lagged_pairs(series: list[dict], months: int):
+    """Yield (prev, cur) where prev is exactly `months` calendar months before cur.
+
+    Matches by date, not list position: FRED drops missing observations (e.g.
+    October 2025, never collected during the funding lapse), so a positional
+    lag would silently compare against the wrong month.
+    """
+    by_month = {_month_index(p["date"]): p for p in series}
+    for cur in series:
+        prev = by_month.get(_month_index(cur["date"]) - months)
+        if prev is not None:
+            yield prev, cur
+
+
+def pct_change(series: list[dict], months: int) -> list[dict]:
     out = []
-    for i in range(periods, len(series)):
-        prev, cur = series[i - periods], series[i]
+    for prev, cur in _lagged_pairs(series, months):
         if prev["value"] == 0:
             continue
         out.append({"date": cur["date"], "value": (cur["value"] / prev["value"] - 1) * 100})
     return out
 
 
-def annualized_pct_change(series: list[dict], periods: int, periods_per_year: int) -> list[dict]:
+def annualized_pct_change(series: list[dict], months: int) -> list[dict]:
     out = []
-    for i in range(periods, len(series)):
-        prev, cur = series[i - periods], series[i]
+    for prev, cur in _lagged_pairs(series, months):
         if prev["value"] <= 0:
             continue
-        rate = (cur["value"] / prev["value"]) ** (periods_per_year / periods) - 1
+        rate = (cur["value"] / prev["value"]) ** (12 / months) - 1
         out.append({"date": cur["date"], "value": rate * 100})
     return out
 
 
-def diff(series: list[dict], periods: int = 1) -> list[dict]:
+def diff(series: list[dict], months: int = 1) -> list[dict]:
+    return [{"date": cur["date"], "value": cur["value"] - prev["value"]}
+            for prev, cur in _lagged_pairs(series, months)]
+
+
+def prior(series: list[dict], months: int) -> dict | None:
+    """The observation exactly `months` before the latest one, or None if missing."""
+    target = _month_index(series[-1]["date"]) - months
+    return next((p for p in reversed(series) if _month_index(p["date"]) == target), None)
+
+
+def with_gaps(series: list[dict], step_months: int = 1) -> list[dict]:
+    """Insert None values for missing periods so charts show a break, not a bridge."""
     out = []
-    for i in range(periods, len(series)):
-        out.append({"date": series[i]["date"], "value": series[i]["value"] - series[i - periods]["value"]})
+    for p in series:
+        if out:
+            m = _month_index(out[-1]["date"]) + step_months
+            while m < _month_index(p["date"]):
+                out.append({"date": dt.date(m // 12, m % 12 + 1, 1).isoformat(), "value": None})
+                m += step_months
+        out.append(p)
     return out
 
 
 def sparkline(series: list[dict], n: int = 12) -> list[float]:
-    return [round(p["value"], 3) for p in series[-n:]]
+    return [round(p["value"], 3) for p in series[-n:] if p["value"] is not None]
 
 
 def fmt_date(d: str) -> str:
@@ -70,11 +104,15 @@ def compact(n: float, decimals: int = 1) -> str:
 def build_table_rows(series: list[dict], n: int = 24, unit: str = "") -> str:
     rows = []
     for p in series[-n:][::-1]:
+        if p["value"] is None:
+            rows.append(f"<tr><td>{fmt_date(p['date'])}</td><td>not published</td></tr>")
+            continue
         rows.append(f"<tr><td>{fmt_date(p['date'])}</td><td>{compact(p['value'], 2)}{unit}</td></tr>")
     return "\n".join(rows)
 
 
-def stat_tile(label: str, value: str, delta: str | None, delta_class: str, as_of: str, spark: list[float], spark_color: str) -> str:
+def stat_tile(label: str, value: str, delta: str | None, delta_class: str, as_of: str, spark: list[float], spark_color: str,
+              note: str | None = None) -> str:
     delta_html = f'<div class="tile-delta {delta_class}">{delta}</div>' if delta else ""
     points = spark or [0]
     lo, hi = min(points), max(points)
@@ -102,13 +140,14 @@ def stat_tile(label: str, value: str, delta: str | None, delta_class: str, as_of
       {delta_html}
       {spark_svg}
       <div class="tile-asof">as of {as_of}</div>
+      {f'<div class="tile-note">{note}</div>' if note else ""}
     </div>"""
 
 
 def chart_card(chart_id: str, title: str, subtitle: str, series: list[dict], color_var: str,
                kind: str, unit: str, table_unit: str, diverging: bool = False) -> tuple[str, dict]:
     labels = [fmt_date(p["date"]) for p in series]
-    values = [round(p["value"], 3) for p in series]
+    values = [None if p["value"] is None else round(p["value"], 3) for p in series]
     table_rows = build_table_rows(series, unit=table_unit)
     chart_config = {
         "id": chart_id,
@@ -245,6 +284,7 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .tile-delta.neutral { color: var(--text-secondary); }
 .sparkline { width: 100%; max-width: 160px; height: 28px; margin-top: 8px; display: block; }
 .tile-asof { font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; }
+.tile-note { font-size: 0.72rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.4; }
 .charts {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px;
 }
@@ -413,7 +453,7 @@ def main() -> int:
     cpi_yoy = pct_change(cpi_hist, 12)
     core_cpi_yoy = pct_change(core_cpi_hist, 12)
     jobs_added = diff(payems_hist, 1)
-    gdp_growth = annualized_pct_change(gdp_hist, 1, 4)
+    gdp_growth = annualized_pct_change(gdp_hist, 3)
 
     if not (cpi_yoy and unrate_hist and jobs_added and gdp_growth and fedfunds_hist):
         missing = [n for n, s in [("CPI", cpi_yoy), ("unemployment", unrate_hist),
@@ -430,29 +470,30 @@ def main() -> int:
             return "good" if cur > prev else "bad"
         return "good" if cur < prev else "bad"
 
-    tiles = []
-    cpi_cur, cpi_prev = cpi_yoy[-1]["value"], cpi_yoy[-2]["value"]
-    tiles.append(stat_tile(
-        "CPI (YoY)", f"{cpi_cur:.1f}%",
-        f"{cpi_cur - cpi_prev:+.1f} pts vs last month",
-        delta_class(cpi_cur, cpi_prev, higher_is_good=False),
-        fmt_date(cpi_yoy[-1]["date"]), sparkline(cpi_yoy), "#2a78d6"))
+    def rate_tile(label, series, months, period, higher_is_good, color, raw_hist=None):
+        cur = series[-1]["value"]
+        prev = prior(series, months)
+        delta, cls = None, "neutral"
+        if prev is not None:
+            delta = f"{cur - prev['value']:+.1f} pts vs {period}"
+            cls = delta_class(cur, prev["value"], higher_is_good)
+        note = None
+        # A newer raw observation exists but its YoY base month was never published.
+        if raw_hist and raw_hist[-1]["date"] > series[-1]["date"]:
+            newest = raw_hist[-1]["date"]
+            base = dt.date.fromisoformat(newest).replace(year=int(newest[:4]) - 1).isoformat()
+            note = (f"{fmt_date(newest)} 12-month change not published: "
+                    f"no {fmt_date(base)} data (2025 funding lapse).")
+        return stat_tile(label, f"{cur:.1f}%", delta, cls, fmt_date(series[-1]["date"]),
+                         sparkline(series), color, note)
+
+    tiles = [rate_tile("CPI (YoY)", cpi_yoy, 1, "last month", False, "#2a78d6", cpi_hist)]
 
     # Core CPI is optional so the page still builds before its first fetch.
-    if len(core_cpi_yoy) >= 2:
-        core_cur, core_prev = core_cpi_yoy[-1]["value"], core_cpi_yoy[-2]["value"]
-        tiles.append(stat_tile(
-            "Core CPI (YoY)", f"{core_cur:.1f}%",
-            f"{core_cur - core_prev:+.1f} pts vs last month",
-            delta_class(core_cur, core_prev, higher_is_good=False),
-            fmt_date(core_cpi_yoy[-1]["date"]), sparkline(core_cpi_yoy), "#c2477d"))
+    if core_cpi_yoy:
+        tiles.append(rate_tile("Core CPI (YoY)", core_cpi_yoy, 1, "last month", False, "#c2477d", core_cpi_hist))
 
-    ur_cur, ur_prev = unrate_hist[-1]["value"], unrate_hist[-2]["value"]
-    tiles.append(stat_tile(
-        "Unemployment Rate", f"{ur_cur:.1f}%",
-        f"{ur_cur - ur_prev:+.1f} pts vs last month",
-        delta_class(ur_cur, ur_prev, higher_is_good=False),
-        fmt_date(unrate_hist[-1]["date"]), sparkline(unrate_hist), "#eb6834"))
+    tiles.append(rate_tile("Unemployment Rate", unrate_hist, 1, "last month", False, "#eb6834"))
 
     jobs_cur = jobs_added[-1]["value"]
     tiles.append(stat_tile(
@@ -460,12 +501,7 @@ def main() -> int:
         None, "neutral",
         fmt_date(jobs_added[-1]["date"]), sparkline(jobs_added), "#2a78d6"))
 
-    gdp_cur, gdp_prev = gdp_growth[-1]["value"], gdp_growth[-2]["value"]
-    tiles.append(stat_tile(
-        "GDP Growth (QoQ ann.)", f"{gdp_cur:.1f}%",
-        f"{gdp_cur - gdp_prev:+.1f} pts vs prior quarter",
-        delta_class(gdp_cur, gdp_prev, higher_is_good=True),
-        fmt_date(gdp_growth[-1]["date"]), sparkline(gdp_growth), "#1baf7a"))
+    tiles.append(rate_tile("GDP Growth (QoQ ann.)", gdp_growth, 3, "prior quarter", True, "#1baf7a"))
 
     ff_upper = fedfunds_hist[-1]["value"]
     ff_lower_hist = history("DFEDTARL")
@@ -480,19 +516,19 @@ def main() -> int:
     chart_configs = []
 
     cards = [
-        chart_card("chart-cpi", "CPI, Year-over-Year", "Headline inflation rate, monthly", cpi_yoy,
+        chart_card("chart-cpi", "CPI, Year-over-Year", "Headline inflation rate, monthly", with_gaps(cpi_yoy),
                    "--series-cpi", "line", "%", "%"),
     ]
     if core_cpi_yoy:
         cards.append(chart_card("chart-core-cpi", "Core CPI, Year-over-Year",
-                                "Inflation excluding food and energy, monthly", core_cpi_yoy,
+                                "Inflation excluding food and energy, monthly", with_gaps(core_cpi_yoy),
                                 "--series-core-cpi", "line", "%", "%"))
     cards += [
-        chart_card("chart-unrate", "Unemployment Rate", "Share of labor force unemployed, monthly", unrate_hist,
+        chart_card("chart-unrate", "Unemployment Rate", "Share of labor force unemployed, monthly", with_gaps(unrate_hist),
                    "--series-unemployment", "line", "%", "%"),
-        chart_card("chart-jobs", "Jobs Added / Lost", "Change in nonfarm payrolls, thousands, monthly", jobs_added,
+        chart_card("chart-jobs", "Jobs Added / Lost", "Change in nonfarm payrolls, thousands, monthly", with_gaps(jobs_added),
                    "--series-jobs-pos", "bar", "K", "K", diverging=True),
-        chart_card("chart-gdp", "GDP Growth", "Real GDP, quarter-over-quarter annualized, quarterly", gdp_growth,
+        chart_card("chart-gdp", "GDP Growth", "Real GDP, quarter-over-quarter annualized, quarterly", with_gaps(gdp_growth, 3),
                    "--series-gdp", "line", "%", "%"),
         chart_card("chart-fedfunds", "Fed Funds Target Rate", "Upper bound of the FOMC's target range, daily",
                    fedfunds_hist, "--series-fedfunds", "step", "%", "%"),
