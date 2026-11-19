@@ -5,7 +5,15 @@
     "frequency": "monthly",
     "date": "2026-10-01",
     "value": 337.476,
-    "fetched_at": "2026-11-19T01:51:46.443429+00:00"
+    "fetched_at": "2026-11-19T15:19:13.577296+00:00"
+  },
+  "CPILFESL": {
+    "name": "Core CPI (less food and energy)",
+    "units": "index (1982-84=100), SA",
+    "frequency": "monthly",
+    "date": "2026-10-01",
+    "value": 339.9,
+    "fetched_at": "2026-11-19T15:19:13.577296+00:00"
   },
   "UNRATE": {
     "name": "Unemployment Rate",
@@ -13,7 +21,7 @@
     "frequency": "monthly",
     "date": "2026-10-01",
     "value": 4.1,
-    "fetched_at": "2026-11-19T01:51:46.443429+00:00"
+    "fetched_at": "2026-11-19T15:19:13.577296+00:00"
   },
   "PAYEMS": {
     "name": "Nonfarm Payrolls",
@@ -21,7 +29,7 @@
     "frequency": "monthly",
     "date": "2026-10-01",
     "value": 159293.0,
-    "fetched_at": "2026-11-19T01:51:46.443429+00:00"
+    "fetched_at": "2026-11-19T15:19:13.577296+00:00"
   },
   "GDPC1": {
     "name": "Real Gross Domestic Product",
@@ -29,22 +37,22 @@
     "frequency": "quarterly",
     "date": "2026-07-01",
     "value": 24611.077,
-    "fetched_at": "2026-11-19T01:51:46.443429+00:00"
+    "fetched_at": "2026-11-19T15:19:13.577296+00:00"
   },
   "DFEDTARU": {
     "name": "Fed Funds Target Rate (Upper Bound)",
     "units": "percent",
     "frequency": "daily (changes at FOMC decisions)",
-    "date": "2026-11-18",
+    "date": "2026-11-19",
     "value": 4.0,
-    "fetched_at": "2026-11-19T01:51:46.443429+00:00"
+    "fetched_at": "2026-11-19T15:19:13.577296+00:00"
   },
   "DFEDTARL": {
     "name": "Fed Funds Target Rate (Lower Bound)",
     "units": "percent",
     "frequency": "daily (changes at FOMC decisions)",
-    "date": "2026-11-18",
+    "date": "2026-11-19",
     "value": 3.75,
-    "fetched_at": "2026-11-19T01:51:46.443429+00:00"
+    "fetched_at": "2026-11-19T15:19:13.577296+00:00"
   }
 }
