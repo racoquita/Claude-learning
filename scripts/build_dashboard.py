@@ -312,7 +312,7 @@ footer a { color: inherit; }
     <div>
       <h1>FOMC Economic Dashboard</h1>
       <p class="subtitle">The indicators behind every Fed decision: inflation, employment, growth, and the policy rate.</p>
-      <p class="meta">Data from FRED (Federal Reserve Bank of St. Louis), sourced from BLS, BEA, and the Federal Reserve. Last refreshed $LAST_REFRESHED.</p>
+      <p class="meta">Data from FRED (Federal Reserve Bank of St. Louis), sourced from BLS, BEA, and the Federal Reserve. Data last updated $LAST_REFRESHED; checked for new releases every 30 minutes on weekdays.</p>
     </div>
     <button id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9680; Theme</button>
   </header>

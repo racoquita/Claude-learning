@@ -75,15 +75,16 @@ def load_json(path: pathlib.Path, default):
 
 def main() -> int:
     HISTORY_DIR.mkdir(parents=True, exist_ok=True)
-    observation_start = (
-        dt.date.today() - dt.timedelta(days=365 * HISTORY_YEARS)
-    ).isoformat()
+    # Anchor to Jan 1 so the window only moves once a year; a rolling start
+    # date dropped one daily observation per run and forced a commit every day.
+    observation_start = dt.date(dt.date.today().year - HISTORY_YEARS, 1, 1).isoformat()
 
     previous_latest = load_json(DATA_DIR / "latest.json", {})
 
     latest: dict = {}
     changes: list = []
     errors: list = []
+    data_changed = False
     fetched_at = dt.datetime.now(dt.timezone.utc).isoformat()
 
     for series_id, meta in SERIES.items():
@@ -92,13 +93,18 @@ def main() -> int:
         except FredError as e:
             print(f"WARN: failed to fetch {series_id}: {e}", file=sys.stderr)
             errors.append({"series_id": series_id, "error": str(e)})
+            if series_id in previous_latest:
+                latest[series_id] = previous_latest[series_id]  # keep last good entry
             continue
 
         if not obs:
             print(f"WARN: no observations returned for {series_id}", file=sys.stderr)
             continue
 
-        (HISTORY_DIR / f"{series_id}.json").write_text(json.dumps(obs, indent=2))
+        hist_path = HISTORY_DIR / f"{series_id}.json"
+        if load_json(hist_path, None) != obs:
+            data_changed = True  # new release, revision, or new series
+            hist_path.write_text(json.dumps(obs, indent=2))
 
         last = obs[-1]
         latest[series_id] = {
@@ -121,11 +127,16 @@ def main() -> int:
                 }
             )
 
-    (DATA_DIR / "latest.json").write_text(json.dumps(latest, indent=2))
+    # Only rewrite latest.json (whose fetched_at changes every run) when the
+    # data itself changed, so a no-op poll leaves the tree clean and the
+    # workflow skips the commit.
+    if data_changed or set(latest) != set(previous_latest):
+        (DATA_DIR / "latest.json").write_text(json.dumps(latest, indent=2))
     (DATA_DIR / "changes.json").write_text(json.dumps(changes, indent=2))
     (DATA_DIR / "errors.json").write_text(json.dumps(errors, indent=2))
 
-    print(f"Fetched {len(latest)}/{len(SERIES)} series. {len(changes)} new data point(s).")
+    print(f"Fetched {len(latest)}/{len(SERIES)} series. {len(changes)} new data point(s). "
+          f"Data changed: {data_changed}.")
     if changes:
         for c in changes:
             print(f"  NEW: {c['name']} ({c['series_id']}) -> {c['new_value']} on {c['new_date']}")

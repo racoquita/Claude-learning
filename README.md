@@ -24,7 +24,9 @@ static page under `docs/`, served by GitHub Pages.
 2. **Add it as a repo secret**: repo Settings → Secrets and variables → Actions →
    New repository secret → name it `FRED_API_KEY`, paste the key.
 3. **Enable GitHub Pages**: repo Settings → Pages → Build and deployment →
-   Source: "Deploy from a branch" → Branch: `main`, folder: `/docs` → Save.
+   Source: "Deploy from a branch" → Branch: the repo's default branch
+   (currently `claude/fomc-economic-dashboard-5j63c7`), folder: `/docs` → Save.
+   Scheduled workflows also only run on the default branch.
 4. **Run the workflow once manually** to populate real data: Actions tab →
    "Update economic dashboard" → Run workflow. After it finishes (~30s), your
    Pages URL (shown in Settings → Pages) will show the live dashboard instead
@@ -34,10 +36,10 @@ That's it — from then on it refreshes itself.
 
 ## How it refreshes
 
-`.github/workflows/update-dashboard.yml` runs hourly, Monday–Friday,
-11:00–22:00 UTC (covers the 8:30am ET BLS/BEA release slot and the 2pm ET FOMC
-announcement time across both EST and EDT, with buffer). You can also trigger
-it manually from the Actions tab any time.
+`.github/workflows/update-dashboard.yml` polls every 30 minutes, Monday–Friday.
+GitHub's scheduler is best-effort and drops many scheduled runs, so it polls
+often; runs that find no new data exit without committing. You can also
+trigger it manually from the Actions tab any time.
 
 Each run:
 
@@ -45,7 +47,7 @@ Each run:
    FRED and caches them under `data/`.
 2. `scripts/build_dashboard.py` computes the derived metrics (CPI and core CPI YoY%, jobs
    added, GDP annualized growth) and regenerates `docs/index.html`.
-3. If anything changed, the workflow commits and pushes — which republishes
+3. If the data changed (a new release or a revision), the workflow commits and pushes — which republishes
    the GitHub Pages site automatically.
 
 Data series tracked (FRED codes): `CPIAUCSL`, `CPILFESL`, `UNRATE`, `PAYEMS`, `GDPC1`,

@@ -2,10 +2,12 @@ name: Update economic dashboard
 
 on:
   schedule:
-    # Every hour, minute :17, Mon-Fri, 11:00-22:00 UTC.
-    # Covers the 8:30am ET BLS/BEA release window and the 2pm ET FOMC
-    # announcement time across both EST and EDT, with buffer.
-    - cron: "17 11-22 * * 1-5"
+    # Every 30 minutes, all day, Mon-Fri (UTC). GitHub's scheduler is
+    # best-effort and silently drops many runs under load (the old 12-runs-a-
+    # day schedule was executing ~1-2 times a day), so poll often and let
+    # no-op runs exit without committing. Off-peak minutes (:07/:37) are
+    # dropped less often than :00.
+    - cron: "7,37 * * * 1-5"
   workflow_dispatch: {}
 
 permissions:
@@ -45,4 +47,6 @@ jobs:
             exit 0
           fi
           git commit -m "Refresh economic dashboard data"
+          # Rebase in case someone pushed to the branch while this ran.
+          git pull --rebase --quiet origin "${GITHUB_REF_NAME}"
           git push
