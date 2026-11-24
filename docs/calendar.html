@@ -129,16 +129,6 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .release-date { font-size: 1.1rem; font-weight: 600; margin-top: 2px; }
 .release-when { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
 .release.soon .release-when { color: var(--text-primary); font-weight: 600; }
-.header-actions { display: flex; gap: 8px; align-items: center; flex: none; }
-.button-link {
-  border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
-  border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; text-decoration: none; font-weight: 500;
-}
-.button-link:hover { border-color: var(--axis); }
-#theme-toggle {
-  border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
-  border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; cursor: pointer;
-}
 .tiles {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: 12px; margin-bottom: 28px;
@@ -190,7 +180,6 @@ footer a, .meta a { color: inherit; }
       <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener">federalreserve.gov</a>.
       Times are Eastern.</p>
     </div>
-    <button id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9680; Theme</button>
   </header>
 
   <div id="calendar">
@@ -272,18 +261,6 @@ const EVENTS = [{"date": "2026-11-25", "label": "GDP", "time_et": "8:30 AM", "de
     list.append(row);
   });
 })();
-
-const toggle = document.getElementById('theme-toggle');
-let stored = null;
-try { stored = localStorage.getItem('fomc-dashboard-theme'); } catch (e) {}
-if (stored) document.documentElement.setAttribute('data-theme', stored);
-toggle.addEventListener('click', () => {
-  const current = document.documentElement.getAttribute('data-theme')
-    || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  const next = current === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  try { localStorage.setItem('fomc-dashboard-theme', next); } catch (e) {}
-});
 </script>
 </body>
 </html>

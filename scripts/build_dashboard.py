@@ -301,16 +301,6 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .release-date { font-size: 1.1rem; font-weight: 600; margin-top: 2px; }
 .release-when { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
 .release.soon .release-when { color: var(--text-primary); font-weight: 600; }
-.header-actions { display: flex; gap: 8px; align-items: center; flex: none; }
-.button-link {
-  border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
-  border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; text-decoration: none; font-weight: 500;
-}
-.button-link:hover { border-color: var(--axis); }
-#theme-toggle {
-  border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
-  border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; cursor: pointer;
-}
 .tiles {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
   gap: 12px; margin-bottom: 28px;
@@ -370,10 +360,6 @@ $BASE_CSS</style>
       <p class="meta">Data from FRED (Federal Reserve Bank of St. Louis), sourced from BLS, BEA, and the Federal Reserve. Checks for new releases each weekday at <time class="check-time" data-utc="14:07">14:07</time>,
       <time class="check-time" data-utc="19:37">19:37</time> and <time class="check-time" data-utc="23:07" data-tz>23:07 UTC</time>:
       after the 8:30&nbsp;AM&nbsp;ET data releases, after the 2&nbsp;PM&nbsp;ET Fed announcement, and a late catch-up.</p>
-    </div>
-    <div class="header-actions">
-      <a class="button-link" href="calendar.html">Release calendar</a>
-      <button id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9680; Theme</button>
     </div>
   </header>
 
@@ -567,17 +553,8 @@ document.querySelectorAll('.check-time').forEach(el => {
   setInterval(update, 60000);
 })();
 
-const toggle = document.getElementById('theme-toggle');
-const stored = localStorage.getItem('fomc-dashboard-theme');
-if (stored) document.documentElement.setAttribute('data-theme', stored);
-toggle.addEventListener('click', () => {
-  const current = document.documentElement.getAttribute('data-theme')
-    || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  const next = current === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('fomc-dashboard-theme', next);
-  renderCharts();
-});
+// Colors follow the device's light/dark setting; redraw charts if it changes.
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderCharts);
 </script>
 </body>
 </html>
@@ -615,7 +592,6 @@ $BASE_CSS
       <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener">federalreserve.gov</a>.
       Times are Eastern.</p>
     </div>
-    <button id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9680; Theme</button>
   </header>
 
   <div id="calendar">
@@ -671,18 +647,6 @@ const EVENTS = $EVENTS_JSON;
     list.append(row);
   });
 })();
-
-const toggle = document.getElementById('theme-toggle');
-let stored = null;
-try { stored = localStorage.getItem('fomc-dashboard-theme'); } catch (e) {}
-if (stored) document.documentElement.setAttribute('data-theme', stored);
-toggle.addEventListener('click', () => {
-  const current = document.documentElement.getAttribute('data-theme')
-    || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  const next = current === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', next);
-  try { localStorage.setItem('fomc-dashboard-theme', next); } catch (e) {}
-});
 </script>
 </body>
 </html>
