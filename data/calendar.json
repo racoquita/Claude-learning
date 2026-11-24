@@ -1,0 +1,33 @@
+{
+  "cpi": {
+    "label": "CPI",
+    "series_id": "CPIAUCSL",
+    "time_et": "8:30 AM",
+    "release_id": 10,
+    "release_name": "Consumer Price Index",
+    "dates": [
+      "2026-12-10"
+    ]
+  },
+  "jobs": {
+    "label": "Jobs report",
+    "series_id": "PAYEMS",
+    "time_et": "8:30 AM",
+    "release_id": 50,
+    "release_name": "Employment Situation",
+    "dates": [
+      "2026-12-04"
+    ]
+  },
+  "gdp": {
+    "label": "GDP",
+    "series_id": "GDPC1",
+    "time_et": "8:30 AM",
+    "release_id": 53,
+    "release_name": "Gross Domestic Product",
+    "dates": [
+      "2026-11-25",
+      "2026-12-23"
+    ]
+  }
+}
