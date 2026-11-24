@@ -99,7 +99,7 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .freshness-time { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .freshness-ago { font-size: 0.9rem; color: var(--text-secondary); }
 .freshness.stale .freshness-ago { color: var(--warn); font-weight: 600; }
-.releases { margin: 28px 0 0; }
+.releases { margin: 0 0 24px; }
 .releases-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0 0 8px; }
 .releases h2 { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
 .text-link { font-size: 0.85rem; color: var(--series-cpi); text-decoration: none; font-weight: 500; }
@@ -120,7 +120,7 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
   .cal-event { grid-column: 1 / -1; grid-row: 2; }
 }
 .release-list {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
   gap: 12px; list-style: none; margin: 0; padding: 0;
 }
 .release {
@@ -200,6 +200,19 @@ footer a, .meta a { color: inherit; }
     <time class="freshness-time" id="freshness-time" datetime="2026-11-24T15:12:57.725614+00:00">Nov 24, 2026, 15:12 UTC</time>
     <span class="freshness-ago" id="freshness-ago"></span>
   </div>
+
+  <section class="releases" aria-labelledby="releases-heading">
+    <div class="releases-head">
+      <h2 id="releases-heading">Next releases</h2>
+      <a class="text-link" href="calendar.html">Full release calendar &rarr;</a>
+    </div>
+    <ul class="release-list" id="release-list">
+      <li class="release"><div class="release-label">GDP</div><div class="release-date">Wed, Nov 25</div><div class="release-when">8:30 AM ET</div></li>
+      <li class="release"><div class="release-label">Jobs report</div><div class="release-date">Fri, Dec 4</div><div class="release-when">8:30 AM ET</div></li>
+      <li class="release"><div class="release-label">Fed rate decision</div><div class="release-date">Wed, Dec 9</div><div class="release-when">2:00 PM ET</div></li>
+      <li class="release"><div class="release-label">CPI</div><div class="release-date">Thu, Dec 10</div><div class="release-when">8:30 AM ET</div></li>
+    </ul>
+  </section>
 
   
 
@@ -503,18 +516,6 @@ footer a, .meta a { color: inherit; }
     </figure>
   </section>
 
-  <section class="releases" aria-labelledby="releases-heading">
-    <div class="releases-head">
-      <h2 id="releases-heading">Next 3 releases</h2>
-      <a class="text-link" href="calendar.html">Full release calendar &rarr;</a>
-    </div>
-    <ul class="release-list" id="release-list">
-      <li class="release"><div class="release-label">GDP</div><div class="release-date">Wed, Nov 25</div><div class="release-when">8:30 AM ET</div></li>
-      <li class="release"><div class="release-label">Jobs report</div><div class="release-date">Fri, Dec 4</div><div class="release-when">8:30 AM ET</div></li>
-      <li class="release"><div class="release-label">Fed rate decision</div><div class="release-date">Wed, Dec 9</div><div class="release-when">2:00 PM ET</div></li>
-    </ul>
-  </section>
-
   <footer>
     <p>Series: CPI (CPIAUCSL, YoY %), Core CPI excl. food &amp; energy (CPILFESL, YoY %), Unemployment Rate (UNRATE), Nonfarm Payrolls change (PAYEMS, jobs added/month),
     Real GDP (GDPC1, QoQ annualized %), Fed Funds Target Rate upper bound (DFEDTARU). All via the
@@ -629,7 +630,7 @@ document.querySelectorAll('.check-time').forEach(el => {
   const items = RELEASES.map(r => ({ ...r, next: r.dates.find(d => d >= todayEt) || null }))
     .filter(r => r.next)
     .sort((a, b) => a.next < b.next ? -1 : 1)
-    .slice(0, 3);
+    .slice(0, 4);
   list.innerHTML = '';
   items.forEach(r => {
     const li = document.createElement('li');

@@ -270,7 +270,7 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .freshness-time { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .freshness-ago { font-size: 0.9rem; color: var(--text-secondary); }
 .freshness.stale .freshness-ago { color: var(--warn); font-weight: 600; }
-.releases { margin: 28px 0 0; }
+.releases { margin: 0 0 24px; }
 .releases-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0 0 8px; }
 .releases h2 { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
 .text-link { font-size: 0.85rem; color: var(--series-cpi); text-decoration: none; font-weight: 500; }
@@ -291,7 +291,7 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
   .cal-event { grid-column: 1 / -1; grid-row: 2; }
 }
 .release-list {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
   gap: 12px; list-style: none; margin: 0; padding: 0;
 }
 .release {
@@ -384,6 +384,16 @@ $BASE_CSS</style>
     <span class="freshness-ago" id="freshness-ago"></span>
   </div>
 
+  <section class="releases" aria-labelledby="releases-heading">
+    <div class="releases-head">
+      <h2 id="releases-heading">Next releases</h2>
+      <a class="text-link" href="calendar.html">Full release calendar &rarr;</a>
+    </div>
+    <ul class="release-list" id="release-list">
+      $RELEASES
+    </ul>
+  </section>
+
   $ERROR_BANNER
 
   <section class="tiles">
@@ -392,16 +402,6 @@ $BASE_CSS</style>
 
   <section class="charts">
     $CHARTS
-  </section>
-
-  <section class="releases" aria-labelledby="releases-heading">
-    <div class="releases-head">
-      <h2 id="releases-heading">Next 3 releases</h2>
-      <a class="text-link" href="calendar.html">Full release calendar &rarr;</a>
-    </div>
-    <ul class="release-list" id="release-list">
-      $RELEASES
-    </ul>
   </section>
 
   <footer>
@@ -518,7 +518,7 @@ document.querySelectorAll('.check-time').forEach(el => {
   const items = RELEASES.map(r => ({ ...r, next: r.dates.find(d => d >= todayEt) || null }))
     .filter(r => r.next)
     .sort((a, b) => a.next < b.next ? -1 : 1)
-    .slice(0, 3);
+    .slice(0, 4);
   list.innerHTML = '';
   items.forEach(r => {
     const li = document.createElement('li');
@@ -829,7 +829,7 @@ def main() -> int:
     today = dt.date.today().isoformat()
     release_items = []  # no-JS fallback; the page script re-derives these live
     for r in sorted((r for r in releases if any(d >= today for d in r["dates"])),
-                    key=lambda r: next(d for d in r["dates"] if d >= today))[:3]:
+                    key=lambda r: next(d for d in r["dates"] if d >= today))[:4]:
         nxt = next((d for d in r["dates"] if d >= today), None)
         date_txt = dt.date.fromisoformat(nxt).strftime("%a, %b %-d") if nxt else "Not yet scheduled"
         when_txt = f'{r["time_et"]} ET' if nxt else ""
