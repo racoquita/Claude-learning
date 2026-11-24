@@ -18,6 +18,7 @@
   --axis: #c3c2b7;
   --border: rgba(11,11,11,0.10);
   --delta-good: #006300;
+  --warn: #a35a00;
   --delta-bad: #d03b3b;
   --series-cpi: #2a78d6;
   --series-core-cpi: #c2477d;
@@ -39,6 +40,7 @@
     --axis: #383835;
     --border: rgba(255,255,255,0.10);
     --delta-good: #0ca30c;
+    --warn: #e8a33d;
     --delta-bad: #d03b3b;
     --series-cpi: #3987e5;
     --series-core-cpi: #e0679c;
@@ -60,6 +62,7 @@
   --axis: #383835;
   --border: rgba(255,255,255,0.10);
   --delta-good: #0ca30c;
+  --warn: #e8a33d;
   --delta-bad: #d03b3b;
   --series-cpi: #3987e5;
   --series-core-cpi: #e0679c;
@@ -79,11 +82,23 @@ body {
 .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 20px 64px; }
 header.page-header {
   display: flex; justify-content: space-between; align-items: flex-start;
-  gap: 16px; flex-wrap: wrap; margin-bottom: 24px;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 16px;
 }
+header.page-header > div { flex: 1 1 320px; min-width: 0; }
 h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .subtitle { color: var(--text-secondary); margin: 0; font-size: 0.95rem; }
 .meta { color: var(--text-muted); font-size: 0.82rem; margin-top: 6px; }
+.freshness {
+  display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+  padding: 10px 16px; margin: 0 0 20px;
+}
+.freshness-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--delta-good); flex: none; }
+.freshness.stale .freshness-dot { background: var(--warn); }
+.freshness-label { font-size: 0.8rem; color: var(--text-secondary); }
+.freshness-time { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.freshness-ago { font-size: 0.9rem; color: var(--text-secondary); }
+.freshness.stale .freshness-ago { color: var(--warn); font-weight: 600; }
 #theme-toggle {
   border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
   border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; cursor: pointer;
@@ -132,10 +147,17 @@ footer a { color: inherit; }
     <div>
       <h1>FOMC Economic Dashboard</h1>
       <p class="subtitle">The indicators behind every Fed decision: inflation, employment, growth, and the policy rate.</p>
-      <p class="meta">Data from FRED (Federal Reserve Bank of St. Louis), sourced from BLS, BEA, and the Federal Reserve. Data last updated 2026-11-24 15:12 UTC; checked for new releases every 30 minutes on weekdays.</p>
+      <p class="meta">Data from FRED (Federal Reserve Bank of St. Louis), sourced from BLS, BEA, and the Federal Reserve. Checked for new releases every 30 minutes on weekdays.</p>
     </div>
     <button id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9680; Theme</button>
   </header>
+
+  <div class="freshness" id="freshness" data-ts="2026-11-24T15:12:57.725614+00:00" role="status">
+    <span class="freshness-dot" aria-hidden="true"></span>
+    <span class="freshness-label">Last refreshed</span>
+    <time class="freshness-time" id="freshness-time" datetime="2026-11-24T15:12:57.725614+00:00">Nov 24, 2026, 15:12 UTC</time>
+    <span class="freshness-ago" id="freshness-ago"></span>
+  </div>
 
   
 
@@ -531,6 +553,28 @@ function renderCharts() {
 }
 
 renderCharts();
+
+// Show the refresh time in the viewer's own time zone, with its age.
+(function () {
+  const box = document.getElementById('freshness');
+  const ts = Date.parse(box.dataset.ts);
+  if (isNaN(ts)) return;
+  document.getElementById('freshness-time').textContent = new Date(ts).toLocaleString(undefined, {
+    month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
+  });
+  const ago = document.getElementById('freshness-ago');
+  function update() {
+    const mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
+    const text = mins < 60 ? `${mins} min ago`
+      : mins < 48 * 60 ? `${Math.round(mins / 60)} hours ago`
+      : `${Math.round(mins / 1440)} days ago`;
+    const stale = mins > 3 * 1440;  // longer than a weekend: the refresh job is likely stuck
+    box.classList.toggle('stale', stale);
+    ago.textContent = stale ? `${text} · may be out of date` : text;
+  }
+  update();
+  setInterval(update, 60000);
+})();
 
 const toggle = document.getElementById('theme-toggle');
 const stored = localStorage.getItem('fomc-dashboard-theme');
