@@ -36,9 +36,11 @@ That's it — from then on it refreshes itself.
 
 ## How it refreshes
 
-`.github/workflows/update-dashboard.yml` polls every 30 minutes, Monday–Friday.
-GitHub's scheduler is best-effort and drops many scheduled runs, so it polls
-often; runs that find no new data exit without committing. You can also
+`.github/workflows/update-dashboard.yml` checks three times each weekday:
+14:07 UTC (after the 8:30am ET BLS/BEA releases), 19:37 UTC (after the 2pm ET
+FOMC announcement) and 23:07 UTC (late catch-up). GitHub's scheduler is
+best-effort and can delay or drop runs; runs that find no new data exit
+without committing. You can also
 trigger it manually from the Actions tab any time.
 
 Each run:

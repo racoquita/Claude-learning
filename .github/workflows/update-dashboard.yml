@@ -2,12 +2,15 @@ name: Update economic dashboard
 
 on:
   schedule:
-    # Every 30 minutes, all day, Mon-Fri (UTC). GitHub's scheduler is
-    # best-effort and silently drops many runs under load (the old 12-runs-a-
-    # day schedule was executing ~1-2 times a day), so poll often and let
-    # no-op runs exit without committing. Off-peak minutes (:07/:37) are
-    # dropped less often than :00.
-    - cron: "7,37 * * * 1-5"
+    # Three checks per weekday (UTC), timed after the usual release slots:
+    #   14:07 - after the 8:30am ET BLS/BEA releases (EST and EDT)
+    #   19:37 - after the 2pm ET FOMC announcement (EST and EDT)
+    #   23:07 - late catch-up for anything FRED posts in the afternoon
+    # GitHub's scheduler is best-effort and can delay or drop runs; no-op
+    # runs exit without committing.
+    - cron: "7 14 * * 1-5"
+    - cron: "37 19 * * 1-5"
+    - cron: "7 23 * * 1-5"
   workflow_dispatch: {}
 
 permissions:
