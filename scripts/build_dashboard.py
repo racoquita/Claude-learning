@@ -279,6 +279,19 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .freshness-time { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .freshness-ago { font-size: 0.9rem; color: var(--text-secondary); }
 .freshness.stale .freshness-ago { color: var(--warn); font-weight: 600; }
+.releases { margin: 0 0 24px; }
+.releases h2 { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+.release-list {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+  gap: 12px; list-style: none; margin: 0; padding: 0;
+}
+.release {
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px;
+}
+.release-label { font-size: 0.8rem; color: var(--text-secondary); }
+.release-date { font-size: 1.1rem; font-weight: 600; margin-top: 2px; }
+.release-when { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+.release.soon .release-when { color: var(--text-primary); font-weight: 600; }
 #theme-toggle {
   border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
   border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; cursor: pointer;
@@ -341,6 +354,13 @@ footer a { color: inherit; }
     <span class="freshness-ago" id="freshness-ago"></span>
   </div>
 
+  <section class="releases" aria-labelledby="releases-heading">
+    <h2 id="releases-heading">Next releases</h2>
+    <ul class="release-list" id="release-list">
+      $RELEASES
+    </ul>
+  </section>
+
   $ERROR_BANNER
 
   <section class="tiles">
@@ -361,6 +381,7 @@ footer a { color: inherit; }
 
 <script>
 const CHARTS = $CHARTS_JSON;
+const RELEASES = $RELEASES_JSON;
 
 function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -453,6 +474,41 @@ document.querySelectorAll('.check-time').forEach(el => {
     hour: 'numeric', minute: '2-digit', ...('tz' in el.dataset ? { timeZoneName: 'short' } : {}),
   });
 });
+
+// Next releases: pick each one's next date from the viewer's clock (in ET, where
+// the agencies publish), so the panel stays right even if the page is days old.
+(function () {
+  const list = document.getElementById('release-list');
+  if (!RELEASES.length) return;
+  const todayEt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+  const dayMs = 86400000;
+  const items = RELEASES.map(r => ({ ...r, next: r.dates.find(d => d >= todayEt) || null }))
+    .sort((a, b) => (a.next || '9999') < (b.next || '9999') ? -1 : 1);
+  list.innerHTML = '';
+  items.forEach(r => {
+    const li = document.createElement('li');
+    li.className = 'release';
+    const label = document.createElement('div');
+    label.className = 'release-label';
+    label.textContent = r.label;
+    const date = document.createElement('div');
+    date.className = 'release-date';
+    const when = document.createElement('div');
+    when.className = 'release-when';
+    if (r.next) {
+      date.textContent = new Date(r.next + 'T12:00:00Z').toLocaleDateString(undefined,
+        { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+      const days = Math.round((Date.parse(r.next) - Date.parse(todayEt)) / dayMs);
+      const rel = days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`;
+      when.textContent = `${r.time_et} ET · ${rel}`;
+      if (days <= 1) li.classList.add('soon');
+    } else {
+      date.textContent = 'Not yet scheduled';
+    }
+    li.append(label, date, when);
+    list.appendChild(li);
+  });
+})();
 
 // Show the refresh time in the viewer's own time zone, with its age.
 (function () {
@@ -594,6 +650,22 @@ def main() -> int:
         chart_htmls.append(html)
         chart_configs.append(cfg)
 
+    # Next releases: FRED calendar (data/calendar.json) plus hand-kept FOMC dates.
+    releases = [{"label": c["label"], "time_et": c["time_et"], "dates": c.get("dates", [])}
+                for c in load_json(DATA_DIR / "calendar.json", {}).values()]
+    fomc = load_json(DATA_DIR / "fomc_dates.json", {}).get("decision_dates", [])
+    if fomc:
+        releases.append({"label": "Fed rate decision", "time_et": "2:00 PM", "dates": fomc})
+    today = dt.date.today().isoformat()
+    release_items = []  # no-JS fallback; the page script re-derives these live
+    for r in sorted(releases, key=lambda r: next((d for d in r["dates"] if d >= today), "9999")):
+        nxt = next((d for d in r["dates"] if d >= today), None)
+        date_txt = dt.date.fromisoformat(nxt).strftime("%a, %b %-d") if nxt else "Not yet scheduled"
+        when_txt = f'{r["time_et"]} ET' if nxt else ""
+        release_items.append(
+            f'<li class="release"><div class="release-label">{r["label"]}</div>'
+            f'<div class="release-date">{date_txt}</div><div class="release-when">{when_txt}</div></li>')
+
     error_banner = ""
     if errors:
         names = ", ".join(e["series_id"] for e in errors)
@@ -614,6 +686,8 @@ def main() -> int:
         TILES="\n".join(tiles),
         CHARTS="\n".join(chart_htmls),
         CHARTS_JSON=json.dumps(chart_configs),
+        RELEASES="\n      ".join(release_items),
+        RELEASES_JSON=json.dumps(releases),
     )
 
     (DOCS_DIR / "index.html").write_text(html)

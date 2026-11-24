@@ -66,3 +66,32 @@ def get_series_info(series_id: str) -> dict:
     data = _get("series", {"series_id": series_id})
     seriess = data.get("seriess") or []
     return seriess[0] if seriess else {}
+
+
+def get_series_release_id(series_id: str) -> tuple[int, str]:
+    """The FRED release (id, name) a series is published in, e.g. CPIAUCSL -> Consumer Price Index."""
+    data = _get("series/release", {"series_id": series_id})
+    releases = data.get("releases") or []
+    if not releases:
+        raise FredError(f"No release found for series {series_id}")
+    return int(releases[0]["id"]), releases[0]["name"]
+
+
+def get_upcoming_release_dates(release_id: int, start: str) -> list[str]:
+    """Scheduled release dates on or after `start` (YYYY-MM-DD), ascending.
+
+    include_release_dates_with_no_data=true is what makes FRED return
+    future dates; without it only past dates come back.
+    """
+    data = _get(
+        "release/dates",
+        {
+            "release_id": release_id,
+            "realtime_start": start,
+            "realtime_end": "9999-12-31",
+            "include_release_dates_with_no_data": "true",
+            "sort_order": "asc",
+            "limit": 1000,
+        },
+    )
+    return sorted({d["date"] for d in data.get("release_dates", []) if d["date"] >= start})

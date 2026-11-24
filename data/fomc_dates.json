@@ -1,0 +1,12 @@
+{
+  "_note": "FOMC policy-decision days (second day of each meeting; statement at 2:00 PM ET). Maintained by hand: FRED has no FOMC calendar. Source of truth: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm. Oct and Dec 2027 omitted until confirmed (sources conflicted as of Nov 2026).",
+  "decision_dates": [
+    "2026-12-09",
+    "2027-01-27",
+    "2027-03-17",
+    "2027-04-28",
+    "2027-06-09",
+    "2027-07-28",
+    "2027-09-15"
+  ]
+}

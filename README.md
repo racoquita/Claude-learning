@@ -98,6 +98,8 @@ scripts/build_dashboard.py   Renders docs/index.html from cached data
 data/history/<series>.json   Full observation history per series
 data/latest.json             Latest observation per series + fetch timestamp
 data/changes.json            Series that changed on the most recent run
+data/calendar.json           Upcoming CPI/jobs/GDP release dates (FRED release calendar)
+data/fomc_dates.json         FOMC decision dates, kept by hand (update yearly from federalreserve.gov)
 docs/index.html              The published dashboard (generated)
 docs/vendor/chart.umd.js     Vendored Chart.js (no external CDN dependency)
 .github/workflows/           The scheduled refresh job

@@ -16,7 +16,8 @@ import json
 import pathlib
 import sys
 
-from fred_client import FredError, get_series_observations
+from fred_client import (FredError, get_series_observations, get_series_release_id,
+                         get_upcoming_release_dates)
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
@@ -62,6 +63,36 @@ SERIES = {
 }
 
 HISTORY_YEARS = 12
+
+# Releases shown in the "Next releases" panel, keyed by a series published in
+# each. The release id is looked up from the series so it can't drift.
+CALENDAR = {
+    "cpi": {"label": "CPI", "series_id": "CPIAUCSL", "time_et": "8:30 AM"},
+    "jobs": {"label": "Jobs report", "series_id": "PAYEMS", "time_et": "8:30 AM"},
+    "gdp": {"label": "GDP", "series_id": "GDPC1", "time_et": "8:30 AM"},
+}
+CALENDAR_DATES_KEPT = 6
+
+
+def fetch_calendar() -> None:
+    """Refresh data/calendar.json; keep the previous entry for any release that fails."""
+    path = DATA_DIR / "calendar.json"
+    previous = load_json(path, {})
+    today = dt.date.today().isoformat()
+    out = {}
+    for key, meta in CALENDAR.items():
+        try:
+            release_id, release_name = get_series_release_id(meta["series_id"])
+            dates = get_upcoming_release_dates(release_id, today)[:CALENDAR_DATES_KEPT]
+            out[key] = {**meta, "release_id": release_id, "release_name": release_name, "dates": dates}
+        except FredError as e:
+            print(f"WARN: failed to fetch release calendar for {key}: {e}", file=sys.stderr)
+            if key in previous:
+                out[key] = previous[key]
+    if out != previous:  # only touch the file when the schedule changed
+        path.write_text(json.dumps(out, indent=2))
+    for key, entry in out.items():
+        print(f"Calendar: {entry['label']} (release {entry.get('release_id')}) next {entry['dates'][:2]}")
 
 
 def load_json(path: pathlib.Path, default):
@@ -134,6 +165,8 @@ def main() -> int:
         (DATA_DIR / "latest.json").write_text(json.dumps(latest, indent=2))
     (DATA_DIR / "changes.json").write_text(json.dumps(changes, indent=2))
     (DATA_DIR / "errors.json").write_text(json.dumps(errors, indent=2))
+
+    fetch_calendar()
 
     print(f"Fetched {len(latest)}/{len(SERIES)} series. {len(changes)} new data point(s). "
           f"Data changed: {data_changed}.")
