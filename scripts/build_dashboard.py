@@ -255,7 +255,7 @@ header.page-header {
   display: flex; justify-content: space-between; align-items: flex-start;
   gap: 16px; flex-wrap: wrap; margin-bottom: 16px;
 }
-header.page-header > div { flex: 1 1 320px; min-width: 0; }
+header.page-header > div:first-child { flex: 1 1 320px; min-width: 0; }
 h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .subtitle { color: var(--text-secondary); margin: 0; font-size: 0.95rem; }
 .meta { color: var(--text-muted); font-size: 0.82rem; margin-top: 6px; }
@@ -270,7 +270,7 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .freshness-time { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .freshness-ago { font-size: 0.9rem; color: var(--text-secondary); }
 .freshness.stale .freshness-ago { color: var(--warn); font-weight: 600; }
-.releases { margin: 0 0 24px; }
+.releases { margin: 28px 0 0; }
 .releases-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0 0 8px; }
 .releases h2 { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
 .text-link { font-size: 0.85rem; color: var(--series-cpi); text-decoration: none; font-weight: 500; }
@@ -291,7 +291,7 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
   .cal-event { grid-column: 1 / -1; grid-row: 2; }
 }
 .release-list {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 12px; list-style: none; margin: 0; padding: 0;
 }
 .release {
@@ -301,6 +301,12 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .release-date { font-size: 1.1rem; font-weight: 600; margin-top: 2px; }
 .release-when { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
 .release.soon .release-when { color: var(--text-primary); font-weight: 600; }
+.header-actions { display: flex; gap: 8px; align-items: center; flex: none; }
+.button-link {
+  border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
+  border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; text-decoration: none; font-weight: 500;
+}
+.button-link:hover { border-color: var(--axis); }
 #theme-toggle {
   border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
   border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; cursor: pointer;
@@ -365,7 +371,10 @@ $BASE_CSS</style>
       <time class="check-time" data-utc="19:37">19:37</time> and <time class="check-time" data-utc="23:07" data-tz>23:07 UTC</time>:
       after the 8:30&nbsp;AM&nbsp;ET data releases, after the 2&nbsp;PM&nbsp;ET Fed announcement, and a late catch-up.</p>
     </div>
-    <button id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9680; Theme</button>
+    <div class="header-actions">
+      <a class="button-link" href="calendar.html">Release calendar</a>
+      <button id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9680; Theme</button>
+    </div>
   </header>
 
   <div class="freshness" id="freshness" data-ts="$LAST_REFRESHED_ISO" role="status">
@@ -375,16 +384,6 @@ $BASE_CSS</style>
     <span class="freshness-ago" id="freshness-ago"></span>
   </div>
 
-  <section class="releases" aria-labelledby="releases-heading">
-    <div class="releases-head">
-      <h2 id="releases-heading">Next releases</h2>
-      <a class="text-link" href="calendar.html">Full release calendar &rarr;</a>
-    </div>
-    <ul class="release-list" id="release-list">
-      $RELEASES
-    </ul>
-  </section>
-
   $ERROR_BANNER
 
   <section class="tiles">
@@ -393,6 +392,16 @@ $BASE_CSS</style>
 
   <section class="charts">
     $CHARTS
+  </section>
+
+  <section class="releases" aria-labelledby="releases-heading">
+    <div class="releases-head">
+      <h2 id="releases-heading">Next 3 releases</h2>
+      <a class="text-link" href="calendar.html">Full release calendar &rarr;</a>
+    </div>
+    <ul class="release-list" id="release-list">
+      $RELEASES
+    </ul>
   </section>
 
   <footer>
@@ -507,7 +516,9 @@ document.querySelectorAll('.check-time').forEach(el => {
   const todayEt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
   const dayMs = 86400000;
   const items = RELEASES.map(r => ({ ...r, next: r.dates.find(d => d >= todayEt) || null }))
-    .sort((a, b) => (a.next || '9999') < (b.next || '9999') ? -1 : 1);
+    .filter(r => r.next)
+    .sort((a, b) => a.next < b.next ? -1 : 1)
+    .slice(0, 3);
   list.innerHTML = '';
   items.forEach(r => {
     const li = document.createElement('li');
@@ -817,7 +828,8 @@ def main() -> int:
         releases.append({"label": "Fed rate decision", "time_et": "2:00 PM", "dates": fomc})
     today = dt.date.today().isoformat()
     release_items = []  # no-JS fallback; the page script re-derives these live
-    for r in sorted(releases, key=lambda r: next((d for d in r["dates"] if d >= today), "9999")):
+    for r in sorted((r for r in releases if any(d >= today for d in r["dates"])),
+                    key=lambda r: next(d for d in r["dates"] if d >= today))[:3]:
         nxt = next((d for d in r["dates"] if d >= today), None)
         date_txt = dt.date.fromisoformat(nxt).strftime("%a, %b %-d") if nxt else "Not yet scheduled"
         when_txt = f'{r["time_et"]} ET' if nxt else ""

@@ -84,7 +84,7 @@ header.page-header {
   display: flex; justify-content: space-between; align-items: flex-start;
   gap: 16px; flex-wrap: wrap; margin-bottom: 16px;
 }
-header.page-header > div { flex: 1 1 320px; min-width: 0; }
+header.page-header > div:first-child { flex: 1 1 320px; min-width: 0; }
 h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .subtitle { color: var(--text-secondary); margin: 0; font-size: 0.95rem; }
 .meta { color: var(--text-muted); font-size: 0.82rem; margin-top: 6px; }
@@ -99,7 +99,7 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .freshness-time { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .freshness-ago { font-size: 0.9rem; color: var(--text-secondary); }
 .freshness.stale .freshness-ago { color: var(--warn); font-weight: 600; }
-.releases { margin: 0 0 24px; }
+.releases { margin: 28px 0 0; }
 .releases-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0 0 8px; }
 .releases h2 { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
 .text-link { font-size: 0.85rem; color: var(--series-cpi); text-decoration: none; font-weight: 500; }
@@ -120,7 +120,7 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
   .cal-event { grid-column: 1 / -1; grid-row: 2; }
 }
 .release-list {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 12px; list-style: none; margin: 0; padding: 0;
 }
 .release {
@@ -130,6 +130,12 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .release-date { font-size: 1.1rem; font-weight: 600; margin-top: 2px; }
 .release-when { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
 .release.soon .release-when { color: var(--text-primary); font-weight: 600; }
+.header-actions { display: flex; gap: 8px; align-items: center; flex: none; }
+.button-link {
+  border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
+  border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; text-decoration: none; font-weight: 500;
+}
+.button-link:hover { border-color: var(--axis); }
 #theme-toggle {
   border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
   border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; cursor: pointer;
@@ -182,7 +188,10 @@ footer a, .meta a { color: inherit; }
       <time class="check-time" data-utc="19:37">19:37</time> and <time class="check-time" data-utc="23:07" data-tz>23:07 UTC</time>:
       after the 8:30&nbsp;AM&nbsp;ET data releases, after the 2&nbsp;PM&nbsp;ET Fed announcement, and a late catch-up.</p>
     </div>
-    <button id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9680; Theme</button>
+    <div class="header-actions">
+      <a class="button-link" href="calendar.html">Release calendar</a>
+      <button id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9680; Theme</button>
+    </div>
   </header>
 
   <div class="freshness" id="freshness" data-ts="2026-11-24T15:12:57.725614+00:00" role="status">
@@ -191,19 +200,6 @@ footer a, .meta a { color: inherit; }
     <time class="freshness-time" id="freshness-time" datetime="2026-11-24T15:12:57.725614+00:00">Nov 24, 2026, 15:12 UTC</time>
     <span class="freshness-ago" id="freshness-ago"></span>
   </div>
-
-  <section class="releases" aria-labelledby="releases-heading">
-    <div class="releases-head">
-      <h2 id="releases-heading">Next releases</h2>
-      <a class="text-link" href="calendar.html">Full release calendar &rarr;</a>
-    </div>
-    <ul class="release-list" id="release-list">
-      <li class="release"><div class="release-label">GDP</div><div class="release-date">Wed, Nov 25</div><div class="release-when">8:30 AM ET</div></li>
-      <li class="release"><div class="release-label">Jobs report</div><div class="release-date">Fri, Dec 4</div><div class="release-when">8:30 AM ET</div></li>
-      <li class="release"><div class="release-label">Fed rate decision</div><div class="release-date">Wed, Dec 9</div><div class="release-when">2:00 PM ET</div></li>
-      <li class="release"><div class="release-label">CPI</div><div class="release-date">Thu, Dec 10</div><div class="release-when">8:30 AM ET</div></li>
-    </ul>
-  </section>
 
   
 
@@ -507,6 +503,18 @@ footer a, .meta a { color: inherit; }
     </figure>
   </section>
 
+  <section class="releases" aria-labelledby="releases-heading">
+    <div class="releases-head">
+      <h2 id="releases-heading">Next 3 releases</h2>
+      <a class="text-link" href="calendar.html">Full release calendar &rarr;</a>
+    </div>
+    <ul class="release-list" id="release-list">
+      <li class="release"><div class="release-label">GDP</div><div class="release-date">Wed, Nov 25</div><div class="release-when">8:30 AM ET</div></li>
+      <li class="release"><div class="release-label">Jobs report</div><div class="release-date">Fri, Dec 4</div><div class="release-when">8:30 AM ET</div></li>
+      <li class="release"><div class="release-label">Fed rate decision</div><div class="release-date">Wed, Dec 9</div><div class="release-when">2:00 PM ET</div></li>
+    </ul>
+  </section>
+
   <footer>
     <p>Series: CPI (CPIAUCSL, YoY %), Core CPI excl. food &amp; energy (CPILFESL, YoY %), Unemployment Rate (UNRATE), Nonfarm Payrolls change (PAYEMS, jobs added/month),
     Real GDP (GDPC1, QoQ annualized %), Fed Funds Target Rate upper bound (DFEDTARU). All via the
@@ -619,7 +627,9 @@ document.querySelectorAll('.check-time').forEach(el => {
   const todayEt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
   const dayMs = 86400000;
   const items = RELEASES.map(r => ({ ...r, next: r.dates.find(d => d >= todayEt) || null }))
-    .sort((a, b) => (a.next || '9999') < (b.next || '9999') ? -1 : 1);
+    .filter(r => r.next)
+    .sort((a, b) => a.next < b.next ? -1 : 1)
+    .slice(0, 3);
   list.innerHTML = '';
   items.forEach(r => {
     const li = document.createElement('li');

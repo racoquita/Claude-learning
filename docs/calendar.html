@@ -83,7 +83,7 @@ header.page-header {
   display: flex; justify-content: space-between; align-items: flex-start;
   gap: 16px; flex-wrap: wrap; margin-bottom: 16px;
 }
-header.page-header > div { flex: 1 1 320px; min-width: 0; }
+header.page-header > div:first-child { flex: 1 1 320px; min-width: 0; }
 h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .subtitle { color: var(--text-secondary); margin: 0; font-size: 0.95rem; }
 .meta { color: var(--text-muted); font-size: 0.82rem; margin-top: 6px; }
@@ -98,7 +98,7 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .freshness-time { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .freshness-ago { font-size: 0.9rem; color: var(--text-secondary); }
 .freshness.stale .freshness-ago { color: var(--warn); font-weight: 600; }
-.releases { margin: 0 0 24px; }
+.releases { margin: 28px 0 0; }
 .releases-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0 0 8px; }
 .releases h2 { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
 .text-link { font-size: 0.85rem; color: var(--series-cpi); text-decoration: none; font-weight: 500; }
@@ -119,7 +119,7 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
   .cal-event { grid-column: 1 / -1; grid-row: 2; }
 }
 .release-list {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 12px; list-style: none; margin: 0; padding: 0;
 }
 .release {
@@ -129,6 +129,12 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .release-date { font-size: 1.1rem; font-weight: 600; margin-top: 2px; }
 .release-when { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
 .release.soon .release-when { color: var(--text-primary); font-weight: 600; }
+.header-actions { display: flex; gap: 8px; align-items: center; flex: none; }
+.button-link {
+  border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
+  border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; text-decoration: none; font-weight: 500;
+}
+.button-link:hover { border-color: var(--axis); }
 #theme-toggle {
   border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
   border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; cursor: pointer;
