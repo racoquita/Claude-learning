@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Release Calendar</title>
+<meta name="description" content="Upcoming CPI, jobs report, GDP and Fed rate decision dates.">
+<style>
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb;
+  --page: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --delta-good: #006300;
+  --warn: #a35a00;
+  --delta-bad: #d03b3b;
+  --series-cpi: #2a78d6;
+  --series-core-cpi: #c2477d;
+  --series-unemployment: #eb6834;
+  --series-gdp: #1baf7a;
+  --series-fedfunds: #4a3aa7;
+  --series-jobs-pos: #2a78d6;
+  --series-jobs-neg: #e34948;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --page: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255,255,255,0.10);
+    --delta-good: #0ca30c;
+    --warn: #e8a33d;
+    --delta-bad: #d03b3b;
+    --series-cpi: #3987e5;
+    --series-core-cpi: #e0679c;
+    --series-unemployment: #d95926;
+    --series-gdp: #199e70;
+    --series-fedfunds: #9085e9;
+    --series-jobs-pos: #3987e5;
+    --series-jobs-neg: #e66767;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19;
+  --page: #0d0d0d;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255,255,255,0.10);
+  --delta-good: #0ca30c;
+  --warn: #e8a33d;
+  --delta-bad: #d03b3b;
+  --series-cpi: #3987e5;
+  --series-core-cpi: #e0679c;
+  --series-unemployment: #d95926;
+  --series-gdp: #199e70;
+  --series-fedfunds: #9085e9;
+  --series-jobs-pos: #3987e5;
+  --series-jobs-neg: #e66767;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding: 24px 20px 64px; }
+header.page-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 16px;
+}
+header.page-header > div { flex: 1 1 320px; min-width: 0; }
+h1 { font-size: 1.5rem; margin: 0 0 4px; }
+.subtitle { color: var(--text-secondary); margin: 0; font-size: 0.95rem; }
+.meta { color: var(--text-muted); font-size: 0.82rem; margin-top: 6px; }
+.freshness {
+  display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+  padding: 10px 16px; margin: 0 0 20px;
+}
+.freshness-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--delta-good); flex: none; }
+.freshness.stale .freshness-dot { background: var(--warn); }
+.freshness-label { font-size: 0.8rem; color: var(--text-secondary); }
+.freshness-time { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.freshness-ago { font-size: 0.9rem; color: var(--text-secondary); }
+.freshness.stale .freshness-ago { color: var(--warn); font-weight: 600; }
+.releases { margin: 0 0 24px; }
+.releases-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0 0 8px; }
+.releases h2 { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
+.text-link { font-size: 0.85rem; color: var(--series-cpi); text-decoration: none; font-weight: 500; }
+.text-link:hover { text-decoration: underline; }
+.cal-month { margin: 0 0 24px; }
+.cal-month h2 { font-size: 1rem; margin: 0 0 8px; }
+.cal-list { list-style: none; margin: 0; padding: 0; background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; }
+.cal-row { display: grid; grid-template-columns: 9.5rem 1fr auto; gap: 4px 16px; align-items: baseline; padding: 12px 16px; border-top: 1px solid var(--grid); }
+.cal-row:first-child { border-top: none; }
+.cal-date { font-weight: 600; font-variant-numeric: tabular-nums; }
+.cal-event { font-weight: 500; }
+.cal-desc { grid-column: 2; font-size: 0.82rem; color: var(--text-secondary); }
+.cal-when { font-size: 0.82rem; color: var(--text-muted); text-align: right; white-space: nowrap; }
+.cal-row.soon .cal-when { color: var(--text-primary); font-weight: 600; }
+@media (max-width: 560px) {
+  .cal-row { grid-template-columns: 1fr auto; }
+  .cal-desc { grid-column: 1 / -1; }
+  .cal-event { grid-column: 1 / -1; grid-row: 2; }
+}
+.release-list {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+  gap: 12px; list-style: none; margin: 0; padding: 0;
+}
+.release {
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px;
+}
+.release-label { font-size: 0.8rem; color: var(--text-secondary); }
+.release-date { font-size: 1.1rem; font-weight: 600; margin-top: 2px; }
+.release-when { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+.release.soon .release-when { color: var(--text-primary); font-weight: 600; }
+#theme-toggle {
+  border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
+  border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; cursor: pointer;
+}
+.tiles {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 12px; margin-bottom: 28px;
+}
+.tile {
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 16px;
+}
+.tile-label { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px; }
+.tile-value { font-size: 1.6rem; font-weight: 600; }
+.tile-delta { font-size: 0.82rem; margin-top: 2px; }
+.tile-delta.good { color: var(--delta-good); }
+.tile-delta.bad { color: var(--delta-bad); }
+.tile-delta.neutral { color: var(--text-secondary); }
+.sparkline { width: 100%; max-width: 160px; height: 28px; margin-top: 8px; display: block; }
+.tile-asof { font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; }
+.tile-note { font-size: 0.72rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.4; }
+.charts {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 16px;
+}
+.chart-card {
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px; margin: 0;
+}
+.chart-card h3 { margin: 0 0 2px; font-size: 1rem; }
+.chart-subtitle { margin: 0 0 12px; color: var(--text-secondary); font-size: 0.82rem; }
+.chart-wrap { height: 220px; }
+.table-toggle { margin-top: 10px; }
+.table-toggle summary { cursor: pointer; font-size: 0.8rem; color: var(--text-secondary); }
+.table-scroll { overflow-x: auto; margin-top: 8px; max-height: 220px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+th { color: var(--text-secondary); font-weight: 500; }
+footer { margin-top: 32px; color: var(--text-muted); font-size: 0.78rem; line-height: 1.6; }
+footer a, .meta a { color: inherit; }
+.errors { background: var(--surface-1); border: 1px solid var(--delta-bad); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 0.85rem; color: var(--delta-bad); }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page-header">
+    <div>
+      <p style="margin:0 0 8px"><a class="text-link" href="./">&larr; Dashboard</a></p>
+      <h1>Release Calendar</h1>
+      <p class="subtitle">Upcoming releases for the indicators on the dashboard.</p>
+      <p class="meta">Data release dates from the FRED release calendar (BLS and BEA schedules); FRED
+      usually lists only the next few weeks. Fed meeting dates from
+      <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener">federalreserve.gov</a>.
+      Times are Eastern.</p>
+    </div>
+    <button id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9680; Theme</button>
+  </header>
+
+  <div id="calendar">
+    <section class="cal-month"><h2>November 2026</h2><ul class="cal-list">
+    <li class="cal-row"><div class="cal-date">Wed, Nov 25</div><div class="cal-event">GDP</div><div class="cal-when">8:30 AM ET</div><div class="cal-desc">Real GDP growth, advance or revised estimate (BEA)</div></li>
+    </ul></section>
+    <section class="cal-month"><h2>December 2026</h2><ul class="cal-list">
+    <li class="cal-row"><div class="cal-date">Fri, Dec 4</div><div class="cal-event">Jobs report</div><div class="cal-when">8:30 AM ET</div><div class="cal-desc">Nonfarm payrolls and the unemployment rate (BLS)</div></li>
+    <li class="cal-row"><div class="cal-date">Wed, Dec 9</div><div class="cal-event">Fed rate decision</div><div class="cal-when">2:00 PM ET</div><div class="cal-desc">FOMC statement and target range; press conference at 2:30 PM ET</div></li>
+    <li class="cal-row"><div class="cal-date">Thu, Dec 10</div><div class="cal-event">CPI</div><div class="cal-when">8:30 AM ET</div><div class="cal-desc">Consumer prices: headline and core inflation (BLS)</div></li>
+    <li class="cal-row"><div class="cal-date">Wed, Dec 23</div><div class="cal-event">GDP</div><div class="cal-when">8:30 AM ET</div><div class="cal-desc">Real GDP growth, advance or revised estimate (BEA)</div></li>
+    </ul></section>
+    <section class="cal-month"><h2>January 2027</h2><ul class="cal-list">
+    <li class="cal-row"><div class="cal-date">Wed, Jan 27</div><div class="cal-event">Fed rate decision</div><div class="cal-when">2:00 PM ET</div><div class="cal-desc">FOMC statement and target range; press conference at 2:30 PM ET</div></li>
+    </ul></section>
+    <section class="cal-month"><h2>March 2027</h2><ul class="cal-list">
+    <li class="cal-row"><div class="cal-date">Wed, Mar 17</div><div class="cal-event">Fed rate decision</div><div class="cal-when">2:00 PM ET</div><div class="cal-desc">FOMC statement and target range; press conference at 2:30 PM ET</div></li>
+    </ul></section>
+    <section class="cal-month"><h2>April 2027</h2><ul class="cal-list">
+    <li class="cal-row"><div class="cal-date">Wed, Apr 28</div><div class="cal-event">Fed rate decision</div><div class="cal-when">2:00 PM ET</div><div class="cal-desc">FOMC statement and target range; press conference at 2:30 PM ET</div></li>
+    </ul></section>
+    <section class="cal-month"><h2>June 2027</h2><ul class="cal-list">
+    <li class="cal-row"><div class="cal-date">Wed, Jun 9</div><div class="cal-event">Fed rate decision</div><div class="cal-when">2:00 PM ET</div><div class="cal-desc">FOMC statement and target range; press conference at 2:30 PM ET</div></li>
+    </ul></section>
+    <section class="cal-month"><h2>July 2027</h2><ul class="cal-list">
+    <li class="cal-row"><div class="cal-date">Wed, Jul 28</div><div class="cal-event">Fed rate decision</div><div class="cal-when">2:00 PM ET</div><div class="cal-desc">FOMC statement and target range; press conference at 2:30 PM ET</div></li>
+    </ul></section>
+    <section class="cal-month"><h2>September 2027</h2><ul class="cal-list">
+    <li class="cal-row"><div class="cal-date">Wed, Sep 15</div><div class="cal-event">Fed rate decision</div><div class="cal-when">2:00 PM ET</div><div class="cal-desc">FOMC statement and target range; press conference at 2:30 PM ET</div></li>
+    </ul></section>
+  </div>
+
+  <footer>
+    <p>Rebuilt automatically with the dashboard. Past releases drop off as their dates pass.</p>
+  </footer>
+</div>
+
+<script>
+const EVENTS = [{"date": "2026-11-25", "label": "GDP", "time_et": "8:30 AM", "desc": "Real GDP growth, advance or revised estimate (BEA)"}, {"date": "2026-12-04", "label": "Jobs report", "time_et": "8:30 AM", "desc": "Nonfarm payrolls and the unemployment rate (BLS)"}, {"date": "2026-12-09", "label": "Fed rate decision", "time_et": "2:00 PM", "desc": "FOMC statement and target range; press conference at 2:30 PM ET"}, {"date": "2026-12-10", "label": "CPI", "time_et": "8:30 AM", "desc": "Consumer prices: headline and core inflation (BLS)"}, {"date": "2026-12-23", "label": "GDP", "time_et": "8:30 AM", "desc": "Real GDP growth, advance or revised estimate (BEA)"}, {"date": "2027-01-27", "label": "Fed rate decision", "time_et": "2:00 PM", "desc": "FOMC statement and target range; press conference at 2:30 PM ET"}, {"date": "2027-03-17", "label": "Fed rate decision", "time_et": "2:00 PM", "desc": "FOMC statement and target range; press conference at 2:30 PM ET"}, {"date": "2027-04-28", "label": "Fed rate decision", "time_et": "2:00 PM", "desc": "FOMC statement and target range; press conference at 2:30 PM ET"}, {"date": "2027-06-09", "label": "Fed rate decision", "time_et": "2:00 PM", "desc": "FOMC statement and target range; press conference at 2:30 PM ET"}, {"date": "2027-07-28", "label": "Fed rate decision", "time_et": "2:00 PM", "desc": "FOMC statement and target range; press conference at 2:30 PM ET"}, {"date": "2027-09-15", "label": "Fed rate decision", "time_et": "2:00 PM", "desc": "FOMC statement and target range; press conference at 2:30 PM ET"}];
+
+// Re-render from the viewer's clock (in ET, where the agencies publish) so past
+// dates drop off even if this page hasn't been rebuilt since.
+(function () {
+  const todayEt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+  const upcoming = EVENTS.filter(e => e.date >= todayEt);
+  const root = document.getElementById('calendar');
+  root.innerHTML = '';
+  if (!upcoming.length) {
+    root.textContent = 'No upcoming releases are scheduled yet.';
+    return;
+  }
+  const el = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  let section, list, month;
+  upcoming.forEach(e => {
+    const d = new Date(e.date + 'T12:00:00Z');
+    const m = d.toLocaleDateString(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    if (m !== month) {
+      month = m;
+      section = el('section', 'cal-month');
+      section.append(el('h2', null, m));
+      list = el('ul', 'cal-list');
+      section.append(list);
+      root.append(section);
+    }
+    const days = Math.round((Date.parse(e.date) - Date.parse(todayEt)) / 86400000);
+    const rel = days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`;
+    const row = el('li', 'cal-row' + (days <= 1 ? ' soon' : ''));
+    row.append(
+      el('div', 'cal-date', d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })),
+      el('div', 'cal-event', e.label),
+      el('div', 'cal-when', `${e.time_et} ET · ${rel}`),
+      el('div', 'cal-desc', e.desc),
+    );
+    list.append(row);
+  });
+})();
+
+const toggle = document.getElementById('theme-toggle');
+let stored = null;
+try { stored = localStorage.getItem('fomc-dashboard-theme'); } catch (e) {}
+if (stored) document.documentElement.setAttribute('data-theme', stored);
+toggle.addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme')
+    || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('fomc-dashboard-theme', next); } catch (e) {}
+});
+</script>
+</body>
+</html>

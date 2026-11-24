@@ -178,16 +178,7 @@ def chart_card(chart_id: str, title: str, subtitle: str, series: list[dict], col
     return html, chart_config
 
 
-TEMPLATE = string.Template(r"""<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FOMC Economic Dashboard</title>
-<meta name="description" content="Auto-updating dashboard of the indicators the FOMC watches most: CPI, core CPI, unemployment, jobs added, GDP growth, and the Fed funds target rate.">
-<script src="vendor/chart.umd.js"></script>
-<style>
-:root {
+BASE_CSS = r""":root {
   color-scheme: light;
   --surface-1: #fcfcfb;
   --page: #f9f9f7;
@@ -280,7 +271,25 @@ h1 { font-size: 1.5rem; margin: 0 0 4px; }
 .freshness-ago { font-size: 0.9rem; color: var(--text-secondary); }
 .freshness.stale .freshness-ago { color: var(--warn); font-weight: 600; }
 .releases { margin: 0 0 24px; }
-.releases h2 { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin: 0 0 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+.releases-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0 0 8px; }
+.releases h2 { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
+.text-link { font-size: 0.85rem; color: var(--series-cpi); text-decoration: none; font-weight: 500; }
+.text-link:hover { text-decoration: underline; }
+.cal-month { margin: 0 0 24px; }
+.cal-month h2 { font-size: 1rem; margin: 0 0 8px; }
+.cal-list { list-style: none; margin: 0; padding: 0; background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; }
+.cal-row { display: grid; grid-template-columns: 9.5rem 1fr auto; gap: 4px 16px; align-items: baseline; padding: 12px 16px; border-top: 1px solid var(--grid); }
+.cal-row:first-child { border-top: none; }
+.cal-date { font-weight: 600; font-variant-numeric: tabular-nums; }
+.cal-event { font-weight: 500; }
+.cal-desc { grid-column: 2; font-size: 0.82rem; color: var(--text-secondary); }
+.cal-when { font-size: 0.82rem; color: var(--text-muted); text-align: right; white-space: nowrap; }
+.cal-row.soon .cal-when { color: var(--text-primary); font-weight: 600; }
+@media (max-width: 560px) {
+  .cal-row { grid-template-columns: 1fr auto; }
+  .cal-desc { grid-column: 1 / -1; }
+  .cal-event { grid-column: 1 / -1; grid-row: 2; }
+}
 .release-list {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
   gap: 12px; list-style: none; margin: 0; padding: 0;
@@ -330,9 +339,21 @@ table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
 th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
 th { color: var(--text-secondary); font-weight: 500; }
 footer { margin-top: 32px; color: var(--text-muted); font-size: 0.78rem; line-height: 1.6; }
-footer a { color: inherit; }
+footer a, .meta a { color: inherit; }
 .errors { background: var(--surface-1); border: 1px solid var(--delta-bad); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 0.85rem; color: var(--delta-bad); }
-</style>
+"""
+
+
+TEMPLATE = string.Template(r"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOMC Economic Dashboard</title>
+<meta name="description" content="Auto-updating dashboard of the indicators the FOMC watches most: CPI, core CPI, unemployment, jobs added, GDP growth, and the Fed funds target rate.">
+<script src="vendor/chart.umd.js"></script>
+<style>
+$BASE_CSS</style>
 </head>
 <body>
 <div class="wrap">
@@ -355,7 +376,10 @@ footer a { color: inherit; }
   </div>
 
   <section class="releases" aria-labelledby="releases-heading">
-    <h2 id="releases-heading">Next releases</h2>
+    <div class="releases-head">
+      <h2 id="releases-heading">Next releases</h2>
+      <a class="text-link" href="calendar.html">Full release calendar &rarr;</a>
+    </div>
     <ul class="release-list" id="release-list">
       $RELEASES
     </ul>
@@ -549,6 +573,141 @@ toggle.addEventListener('click', () => {
 """)
 
 
+# What each release is, shown on the calendar page.
+RELEASE_DESCRIPTIONS = {
+    "CPI": "Consumer prices: headline and core inflation (BLS)",
+    "Jobs report": "Nonfarm payrolls and the unemployment rate (BLS)",
+    "GDP": "Real GDP growth, advance or revised estimate (BEA)",
+    "Fed rate decision": "FOMC statement and target range; press conference at 2:30 PM ET",
+}
+
+CALENDAR_TEMPLATE = string.Template(r"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Release Calendar</title>
+<meta name="description" content="Upcoming CPI, jobs report, GDP and Fed rate decision dates.">
+<style>
+$BASE_CSS
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page-header">
+    <div>
+      <p style="margin:0 0 8px"><a class="text-link" href="./">&larr; Dashboard</a></p>
+      <h1>Release Calendar</h1>
+      <p class="subtitle">Upcoming releases for the indicators on the dashboard.</p>
+      <p class="meta">Data release dates from the FRED release calendar (BLS and BEA schedules); FRED
+      usually lists only the next few weeks. Fed meeting dates from
+      <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener">federalreserve.gov</a>.
+      Times are Eastern.</p>
+    </div>
+    <button id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9680; Theme</button>
+  </header>
+
+  <div id="calendar">
+    $CALENDAR_ROWS
+  </div>
+
+  <footer>
+    <p>Rebuilt automatically with the dashboard. Past releases drop off as their dates pass.</p>
+  </footer>
+</div>
+
+<script>
+const EVENTS = $EVENTS_JSON;
+
+// Re-render from the viewer's clock (in ET, where the agencies publish) so past
+// dates drop off even if this page hasn't been rebuilt since.
+(function () {
+  const todayEt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date());
+  const upcoming = EVENTS.filter(e => e.date >= todayEt);
+  const root = document.getElementById('calendar');
+  root.innerHTML = '';
+  if (!upcoming.length) {
+    root.textContent = 'No upcoming releases are scheduled yet.';
+    return;
+  }
+  const el = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  let section, list, month;
+  upcoming.forEach(e => {
+    const d = new Date(e.date + 'T12:00:00Z');
+    const m = d.toLocaleDateString(undefined, { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    if (m !== month) {
+      month = m;
+      section = el('section', 'cal-month');
+      section.append(el('h2', null, m));
+      list = el('ul', 'cal-list');
+      section.append(list);
+      root.append(section);
+    }
+    const days = Math.round((Date.parse(e.date) - Date.parse(todayEt)) / 86400000);
+    const rel = days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`;
+    const row = el('li', 'cal-row' + (days <= 1 ? ' soon' : ''));
+    row.append(
+      el('div', 'cal-date', d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })),
+      el('div', 'cal-event', e.label),
+      el('div', 'cal-when', `${e.time_et} ET · ${rel}`),
+      el('div', 'cal-desc', e.desc),
+    );
+    list.append(row);
+  });
+})();
+
+const toggle = document.getElementById('theme-toggle');
+let stored = null;
+try { stored = localStorage.getItem('fomc-dashboard-theme'); } catch (e) {}
+if (stored) document.documentElement.setAttribute('data-theme', stored);
+toggle.addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme')
+    || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('fomc-dashboard-theme', next); } catch (e) {}
+});
+</script>
+</body>
+</html>
+""")
+
+
+def build_calendar_page(releases: list[dict]) -> str:
+    today = dt.date.today().isoformat()
+    events = sorted(
+        ({"date": d, "label": r["label"], "time_et": r["time_et"],
+          "desc": RELEASE_DESCRIPTIONS.get(r["label"], "")}
+         for r in releases for d in r["dates"] if d >= today),
+        key=lambda e: (e["date"], e["time_et"]),
+    )
+    # No-JS fallback, grouped by month; the page script re-renders it live.
+    parts, month = [], None
+    for e in events:
+        d = dt.date.fromisoformat(e["date"])
+        if d.strftime("%B %Y") != month:
+            if month:
+                parts.append("</ul></section>")
+            month = d.strftime("%B %Y")
+            parts.append(f'<section class="cal-month"><h2>{month}</h2><ul class="cal-list">')
+        parts.append(
+            f'<li class="cal-row"><div class="cal-date">{d.strftime("%a, %b %-d")}</div>'
+            f'<div class="cal-event">{e["label"]}</div><div class="cal-when">{e["time_et"]} ET</div>'
+            f'<div class="cal-desc">{e["desc"]}</div></li>')
+    if month:
+        parts.append("</ul></section>")
+    return CALENDAR_TEMPLATE.safe_substitute(
+        BASE_CSS=BASE_CSS,
+        CALENDAR_ROWS="\n    ".join(parts) or "<p>No upcoming releases are scheduled yet.</p>",
+        EVENTS_JSON=json.dumps(events),
+    )
+
+
 def main() -> int:
     DOCS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -680,6 +839,7 @@ def main() -> int:
             last_refreshed_iso = fetched.isoformat()
 
     html = TEMPLATE.safe_substitute(
+        BASE_CSS=BASE_CSS,
         LAST_REFRESHED=last_refreshed,
         LAST_REFRESHED_ISO=last_refreshed_iso,
         ERROR_BANNER=error_banner,
@@ -691,6 +851,7 @@ def main() -> int:
     )
 
     (DOCS_DIR / "index.html").write_text(html)
+    (DOCS_DIR / "calendar.html").write_text(build_calendar_page(releases))
     (DOCS_DIR / ".nojekyll").write_text("")
     print(f"Wrote {DOCS_DIR / 'index.html'}")
     return 0

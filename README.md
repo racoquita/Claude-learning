@@ -101,6 +101,7 @@ data/changes.json            Series that changed on the most recent run
 data/calendar.json           Upcoming CPI/jobs/GDP release dates (FRED release calendar)
 data/fomc_dates.json         FOMC decision dates, kept by hand (update yearly from federalreserve.gov)
 docs/index.html              The published dashboard (generated)
+docs/calendar.html           The release calendar page, linked from the dashboard (generated)
 docs/vendor/chart.umd.js     Vendored Chart.js (no external CDN dependency)
 .github/workflows/           The scheduled refresh job
 ```
