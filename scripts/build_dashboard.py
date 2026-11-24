@@ -327,7 +327,9 @@ footer a { color: inherit; }
     <div>
       <h1>FOMC Economic Dashboard</h1>
       <p class="subtitle">The indicators behind every Fed decision: inflation, employment, growth, and the policy rate.</p>
-      <p class="meta">Data from FRED (Federal Reserve Bank of St. Louis), sourced from BLS, BEA, and the Federal Reserve. Checked for new releases three times each weekday.</p>
+      <p class="meta">Data from FRED (Federal Reserve Bank of St. Louis), sourced from BLS, BEA, and the Federal Reserve. Checks for new releases each weekday at <time class="check-time" data-utc="14:07">14:07</time>,
+      <time class="check-time" data-utc="19:37">19:37</time> and <time class="check-time" data-utc="23:07" data-tz>23:07 UTC</time>:
+      after the 8:30&nbsp;AM&nbsp;ET data releases, after the 2&nbsp;PM&nbsp;ET Fed announcement, and a late catch-up.</p>
     </div>
     <button id="theme-toggle" type="button" aria-label="Toggle dark mode">&#9680; Theme</button>
   </header>
@@ -441,6 +443,16 @@ function renderCharts() {
 }
 
 renderCharts();
+
+// Show the scheduled check times (UTC in the workflow) in the viewer's time zone.
+document.querySelectorAll('.check-time').forEach(el => {
+  const [h, m] = el.dataset.utc.split(':').map(Number);
+  const d = new Date();
+  d.setUTCHours(h, m, 0, 0);
+  el.textContent = d.toLocaleTimeString(undefined, {
+    hour: 'numeric', minute: '2-digit', ...('tz' in el.dataset ? { timeZoneName: 'short' } : {}),
+  });
+});
 
 // Show the refresh time in the viewer's own time zone, with its age.
 (function () {
